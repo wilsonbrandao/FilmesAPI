@@ -2,6 +2,7 @@
 using FilmesApi.Data;
 using FilmesApi.Data.Dtos.Sessao;
 using FilmesApi.Models;
+using FilmesApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
@@ -13,33 +14,26 @@ namespace FilmesApi.Controllers
     [Route("[controller]")]
     public class SessaoController : ControllerBase
     {
-        private readonly AppDbContext _context;
-        private readonly IMapper _mapper;
+        private readonly SessaoService _sessaoService;
 
-        public SessaoController(AppDbContext context, IMapper mapper)
+        public SessaoController(SessaoService sessaoService)
         {
-            _context = context;
-            _mapper = mapper;
+            _sessaoService = sessaoService;
         }
 
         [HttpGet]
-        public IEnumerable<Sessao> RecuperaSessoes()
+        public IActionResult RecuperaSessoes()
         {
-            return _context.Sessoes;
-
+            List<ReadSessaoDto> listSessaoDto = _sessaoService.RecuperaSessoes();
+            if (listSessaoDto != null) return Ok(listSessaoDto);
+            return NotFound();
         }
 
         [HttpGet("{id}")]
         public IActionResult RecuperaSessaoPorId (int id)
         {
-            Sessao sessao = _context.Sessoes.Where(sessao => sessao.Id == id).FirstOrDefault();
-
-            if(sessao != null)
-            {
-                ReadSessaoDto sessaoDto = _mapper.Map<ReadSessaoDto>(sessao);
-                return Ok(sessaoDto);
-            }
-
+            ReadSessaoDto readSessaoDto = _sessaoService.RecuperaSessoesPorId(id);
+            if(readSessaoDto != null) return Ok(readSessaoDto);
             return NotFound();
 
         }
@@ -47,13 +41,8 @@ namespace FilmesApi.Controllers
         [HttpPost]
         public IActionResult AdicionaSessao([FromBody] CreateSessaoDto sessaoDto)
         {
-            Sessao sessao = _mapper.Map<Sessao>(sessaoDto);
-            _context.Sessoes.Add(sessao);
-            _context.SaveChanges();
-
-            return CreatedAtAction(nameof(RecuperaSessaoPorId), new {Id = sessao.Id}, sessao); 
+            ReadSessaoDto readSessaoDto = _sessaoService.AdicionaSessao(sessaoDto);
+            return CreatedAtAction(nameof(RecuperaSessaoPorId), new {Id = readSessaoDto.Id}, readSessaoDto); 
         }
-
-
     }
 }
