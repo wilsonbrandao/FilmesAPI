@@ -13,7 +13,7 @@ namespace FilmesApi.Models
         public string Nome { get; set; }
 
         //EF Relations
-    [JsonIgnore]
+        [JsonIgnore]
         public virtual List<Cinema> Cinemas { get; set; }
     }
 }
